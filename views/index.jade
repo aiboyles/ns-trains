@@ -1,0 +1,32 @@
+doctype html
+html
+    head
+        title= title
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1.0')
+        meta(name='description', content='')
+        meta(name='author', content='Ann Boyles')
+        link(href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css', rel='stylesheet')
+        link(href='/stylesheets/style.css', rel='stylesheet')
+    body
+        .container
+            h1 NS Trein App
+            .tabs-container
+                ul.tabs-menu
+                    li.current
+                        a(href="#departures") Departures
+                    li
+                        a(href="#disruptions") Disruptions
+                    li
+                        a(href="#trip-planner") Trip Planner
+                .tab
+                    .tab-content#departures
+                        p I am in the departures area.
+                    .tab-content#disruptions
+                        p This is the disruptions area.
+                    .tab-content#trip-planner
+                        p This is the trip planner area.
+    
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js')
+    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js')
+    script(src='javascripts/main.js')

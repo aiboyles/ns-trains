@@ -1,12 +1,10 @@
 function parseData(data) {
-    console.log("in parseData");
-    console.log(data);
     
     $('#disruptions').html(''); 
     
     var myAppendTable = "<div class='panel-group' id='accordion'>";
     
-    // loop through the analyzed speakers
+    // loop through the disruptions
         for (var i = 0; i < data.length; i++) {
             var t = data[i].type,
                 d = data[i].date,
@@ -15,13 +13,12 @@ function parseData(data) {
                 re = data[i].reason,
                 a = data[i].advice,
                 m = data[i].message;
-                console.log("t =" + t + "r = " + r + "re = " + re);
             
-                // add html table to main page
+                // add bootstrap accordion to disruptions tab
                 myAppendTable += "<div class='panel panel-default'><div class='panel-heading'><h4 class='panel-title'>"
                             + "<a data-toggle='collapse' data-parent='#accordion' href='#collapse" + i.toString() + "'>"
                             + r + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
-                            + "<div class='panel-body'><p>" + p + "</p><p>" + m + "</div></div></div>";
+                            + "<div class='panel-body'><p>" + m + "</div></div></div>";
         };
         
         myAppendTable += "</div>";
@@ -32,7 +29,7 @@ function oops(data) {
     console.log("OOPS");
 }
 
-// sends an AJAX call to the search route
+// sends an AJAX call to the disruptions route
 function populateDisruptions() {
         $.ajax({
             type: 'GET',

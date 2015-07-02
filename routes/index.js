@@ -9,7 +9,6 @@ router.index = function(req, res) {
 }
 
 router.disruptions = function(req, res) {
-    console.log("I am in routes.disruptions");
     disruptions(function (data) {
         res.json(data);
     });

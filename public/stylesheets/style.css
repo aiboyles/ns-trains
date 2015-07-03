@@ -4,7 +4,7 @@ font-family: Arial, Helvetica, sans-serif;
 line-height: 1.5;
 font-size: 14px;        
 }
-
+/*
 .tabs-menu {
     height: 30px;
     float: left;
@@ -39,22 +39,36 @@ font-size: 14px;
 
 .tabs-menu .current a {
     color: #2e7da3;
+}*/
+
+.tabs-container {
+    width: 500px;
 }
 
-.tab {
+/*
+tab {
     border: 1px solid #d4d4d1;
     background-color: #fff;
     float: left;
     margin-bottom: 20px;
     width: auto;
-}
+}*/
 
 .tab-content {
-    width: 660px;
+    width: 500px;
+    height: 400px;
     padding: 20px;
-    display: none;
+    border: 1px solid #d4d4d1;
+    background-color: #fff;
+    margin-bottom: 20px;
+    overflow-y: auto;
 }
 
+/*
 #departures {
  display: block;   
 }
+
+#disruptions {
+ display: block;   
+}*/

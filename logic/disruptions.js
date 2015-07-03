@@ -105,5 +105,5 @@ module.exports = function(callback) {
             });
         }
     });
-    setTimeout(function() {callback(disruptions); }, 3500);
+    setTimeout(function() {callback(disruptions); }, 3600);
 }

@@ -1,4 +1,7 @@
 function parseData(data) {
+    console.log("I'm in parseData");
+    console.log(data);
+    console.log(data);
     
     $('#disruptions').html(''); 
     
@@ -30,18 +33,24 @@ function oops(data) {
 }
 
 // sends an AJAX call to the disruptions route
-function populateDisruptions() {
+function populateDisruptions(callback) {
+    console.log("I'm in populateDisruptions");
         $.ajax({
             type: 'GET',
             url: '../disruptions',
-            success: parseData,
+            success: callback,
             error: oops
         });
 }
 
 $(document).ready(function() {
         
-    populateDisruptions();
+    console.log("I'm in doc ready");
+    populateDisruptions(function(data)
+    {
+        console.log("I'm in document ready");
+        parseData(data);                
+    });
         // tab behavior
     /*$(".nav-tabs a").click(function(event) {
         event.preventDefault();

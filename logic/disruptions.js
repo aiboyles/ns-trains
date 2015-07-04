@@ -4,10 +4,11 @@ var config = require('../config');
 var request = require('request');
 var cheerio = require('cheerio');
 var S = require('string');
+var async = require('async');
 
 var url = "https://webservices.ns.nl/ns-api-storingen?actual=true&unplanned=true";
 var today = new Date();
-var disruptions = []; // disruptions array stores all relevant disruptions
+//var disruptions = []; // disruptions array stores all relevant disruptions
 var iterator = 0;
 
 var months = {'jan':'0', 'feb':'1', 'mrt':'2', 'apr':'3', 'mei':'4', 'jun':'5', 'jul':'6', 'aug':'7', 'sep':'8', 'okt':'9', 'nov':'10', 'dec':'11'};
@@ -32,18 +33,30 @@ function addDays(date, days) {
     return result;
 }
 
-module.exports = function(callback) {
-
-    request(options, function (err, res, body) {
-        if (err) {
-            console.log(err);
-        } else {
-            // read XML results into cheerio
-            var $ = cheerio.load(body, {
-            xmlMode: true
-            });
+module.exports = function(callbackFinal) {
+    async.waterfall([
         
+        function makeRequest(callbackMakeRequest) {
+            console.log("I'm in makeRequest");
+            request(options, function (err, res, body) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    // read XML results into cheerio
+                    console.log("in else");
+                    var $ = cheerio.load(body, {
+                    xmlMode: true
+                    });
+                    callbackMakeRequest(null, $);
+                }
+            }); 
+        },
+        
+        function processUnplannedEvents($, callback) {
+            console.log("I'm in processUnplannedEvents");
             // first handle the straightforward unplanned disruptions
+            var disruptions = [];
+            var iterator = 0;
             $('Ongepland').children().each(function(i, elm) {
                 disruptions[iterator] = {
                                 type: 'unplanned',
@@ -56,8 +69,14 @@ module.exports = function(callback) {
                             };
                 iterator++;
             });
+            callback(null, $, disruptions);
+        },
         
+        function processPlannedEvents($, disruptions, callback) {
+            console.log("just before planned");
             // next, handle the planned disruptions
+            var iterator = disruptions.length;
+            
             $('Gepland').children().each(function(i, elm) {
                 // tempArray splits the id string to parse out the start date for the disruption
                 var tempArray = (($(this).find('id').text()).split('_')).slice(-2);
@@ -103,7 +122,10 @@ module.exports = function(callback) {
                     existingids.push($(this).find('id').text());
                 }
             });
+            callback(null, disruptions);
         }
+    ], function (err, result) {
+        console.log("at end of waterfall");
+        callbackFinal(result);
     });
-    setTimeout(function() {callback(disruptions); }, 3600);
 }

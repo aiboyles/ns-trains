@@ -26,6 +26,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 //routes
 app.get('/', routes.index);
 app.get('/disruptions', routes.disruptions);
+app.get('/disruptionsdb', routes.disruptionsdb);
+app.post('/disruptionsdbinsert', routes.disruptionsdbinsert);
+//app.put('/disruptionsdbupdate/:route', routes.disruptionsdbupdate);*/
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

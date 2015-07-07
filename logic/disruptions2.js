@@ -106,10 +106,21 @@ function dbCheck() {
     return tempCallback;
 }
 
-module.exports = function(callbackFinal) {
+module.exports = function(callbackFinalOuter) {
     async.waterfall([
         
-        // pull disruptions information from NS API
+        function checkDisruptionsDb(callbackCheckDb) {
+            var tempCallback = dbCheck();
+            callbackCheckDb(null, tempCallback);
+        },
+        
+        function dbOrApi(result, callback) {
+            console.log("in dborapi");
+            if (result != true) {
+                callback(null, result);
+            }
+            else {
+    async.waterfall([
         function makeRequest(callbackMakeRequest) {
             console.log("I'm in makeRequest");
             request(options, function (err, res, body) {
@@ -126,9 +137,9 @@ module.exports = function(callbackFinal) {
             }); 
         },
         
-        // process the unplanned events from NS API
         function processUnplannedEvents($, callback) {
             console.log("I'm in processUnplannedEvents");
+            // first handle the straightforward unplanned disruptions
             var disruptions = [];
             var iterator = 0;
             $('Ongepland').children().each(function(i, elm) {
@@ -146,7 +157,6 @@ module.exports = function(callbackFinal) {
             callback(null, $, disruptions);
         },
         
-        // then process the planned events
         function processPlannedEvents($, disruptions, callback) {
             console.log("just before planned");
             // next, handle the planned disruptions
@@ -198,19 +208,17 @@ module.exports = function(callbackFinal) {
                 }
             });
             callback(null, disruptions);
-        }
+        },
         
-        /*function insertIntoDb(disruptions, callback) {
+        function insertIntoDb(disruptions, callback) {
             console.log("in insertIntoDB");
-
             // enter everything in disruptions in the database
+            console.log("ouddated is : " + outDated);
+            if (outDated) {
                 var tempDay = new Date();
                 var tempTimeStamp = tempDay.getTime();
                 pg.connect(connectionString, function(err, client, done) {
                     console.log("I am in pg.connect and length is " + disruptions.length);
-                    // first remove everything from the table
-                    client.query("DELETE * FROM disruptions");
-                    console.log("deletion complete");
                     // SQL Query > Select Data
                     for (j=0; j < disruptions.length; j++)
                     {
@@ -218,19 +226,20 @@ module.exports = function(callbackFinal) {
                         client.query("INSERT INTO disruptions(type, route, message, timestamp) values($1, $2, $3, $4)", [disruptions[j].type, disruptions[j].route, disruptions[j].message, tempTimeStamp]);
                     }
                     console.log("I have finished the loop");
-                    client.end();
-                    
-                    // Handle Errors
-                    if(err) {
-                        console.log(err);
-                    }
+                    done();
                 });
-            console.log("i have finished insertIntoDB");
+            }
             callback(null, disruptions);
-        }  */            
+        }              
     ], function (err, result) {
         console.log("at end of waterfall");
         callbackFinal(result);
+    });
+} // end if
+            } // end function
+        ], function (err, result) {
+        console.log("at end of outer waterfall");
+        setTimeout(callbackFinalOuter(result), 5000);
     });
 
 }

@@ -10,11 +10,7 @@ function parseData(data) {
     // loop through the disruptions
         for (var i = 0; i < data.length; i++) {
             var t = data[i].type,
-                d = data[i].date,
-                p = data[i].period,
                 r = data[i].route,
-                re = data[i].reason,
-                a = data[i].advice,
                 m = data[i].message;
             
                 // add bootstrap accordion to disruptions tab
@@ -43,16 +39,63 @@ function populateDisruptions(callback) {
         });
 }
 
+function checkDisruptionsDb(callback) {
+    console.log("I'm in checkDisruptionsDb");
+        $.ajax({
+            type: 'GET',
+            url: '../disruptionsdb',
+            success: callback,
+            error: oops
+        });
+}
+
+function insertDisruptionsDb(results, callback) {
+    console.log("I'm in insertDisruptionsDb");
+    console.log("data is: " + results[0].route);
+        $.ajax({
+            type: 'POST',
+            url: '../disruptionsdbinsert',
+            data: {results : results,
+                   resultslength: results.length},
+            success: callback,
+            error: oops
+        });
+}
+
 $(document).ready(function() {
         
     console.log("I'm in doc ready");
+    var d = new Date();
+    
+    checkDisruptionsDb(function(data)
+    {
+        console.log("I'm in check disruptions");
+        console.log(data);
+        if ((d.getTime() - data[0].timestamp) < 120000) {
+            console.log("NOT outdated!");
+            parseData(data);
+        }
+        else {
+            console.log("YES outdated");
+            populateDisruptions(function(data)
+            {
+                console.log("I'm in popDisrup");
+                parseData(data);
+                insertDisruptionsDb(data, function(results) {
+                    console.log("insert COMPLETED");
+                });
+            });
+        }
+    });
+    
+    /*
     populateDisruptions(function(data)
     {
         console.log("I'm in document ready");
         parseData(data);                
     });
         // tab behavior
-    /*$(".nav-tabs a").click(function(event) {
+    $(".nav-tabs a").click(function(event) {
         event.preventDefault();
         $(this).parent().addClass("active");
         $(this).parent().siblings().removeClass("active");

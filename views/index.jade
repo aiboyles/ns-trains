@@ -16,23 +16,23 @@ html
                     li.active(role="presentation")
                         a(data-toggle="tab" href="#departures") Departures
                     li(role="presentation")
-                        a(data-toggle="tab" href="#disruptions") Disruptions
+                        a(data-toggle="tab" href="#disruptions-tab") Disruptions
                     li(role="presentation")
                         a(data-toggle="tab" href="#trip-planner") Trip Planner
                 .tab-content
                     .tab-pane.fade.in.active#departures
                         ul.nav.nav-pills
-                            li.active
+                            li
                                 a(data-toggle="pill" href="#edit") Edit
                             li
                                 a(data-toggle="pill" href="#add") Add Station
                         .tab-content(style="width:auto; height:auto; padding-left:0px;")
                             p Departures section here.
-                            .tab-pane.fade.active#edit
+                            .tab-pane.fade#edit
                                 p Edit section
                             .tab-pane.fade#add
                                 p Add station
-                    .tab-pane.fade#disruptions
+                    .tab-pane.fade#disruptions-tab
                         p Loading...
                     .tab-pane.fade#trip-planner
                         p This is the trip planner area.

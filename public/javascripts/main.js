@@ -1,13 +1,16 @@
 function parseData(data) {
     console.log("I'm in parseData");
     console.log(data);
-    console.log(data);
+    //console.log(data);
     
-    $('#disruptions').html(''); 
+    $('#disruptions-tab').html('LOADINGLOADING'); 
+    
+    $('#trip-planner').html('TRALALALALLAAAAA');
+    
+    $('#departures').html('bblumbllkdlkj');
     
     var myAppendTable = "<div class='panel-group' id='accordion'>";
-    
-    // loop through the disruptions
+
         for (var i = 0; i < data.length; i++) {
             var t = data[i].type,
                 r = data[i].route,
@@ -18,10 +21,42 @@ function parseData(data) {
                             + "<a data-toggle='collapse' data-parent='#accordion' href='#collapse" + i.toString() + "'>"
                             + r + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
                             + "<div class='panel-body'><p>" + m + "</div></div></div>";
+            console.log("in loop " + i);
+            };
+        
+        //console.log(myAppendTable);
+        myAppendTable += "</div>";
+        console.log(myAppendTable);
+        $('#disruptions-tab').html(myAppendTable);
+    
+        console.log("I've now appended it");
+        /*$('li[id=disruptionstab]').html('');
+        var tabAppend = "<a data-toggle='tab' href='#disruptions'>Disruptions <span class='badge badge-info'>"
+                            + data.length + "</span></a>";
+    
+        $('li[id=disruptionstab]').html(tabAppend);*/
+}
+
+function parseStationData(data) {
+    console.log("I'm in parseDataStation");
+    //console.log(data);
+    //console.log(data);
+    
+    $('#disruptions').html(''); 
+    
+    var myAppendTable = "<div class='list-group'>";
+    
+    // loop through the disruptions
+        for (var i = 0; i < data.length; i++) {
+            var n = data[i].name,
+                c = data[i].code;
+            
+                // add bootstrap accordion to disruptions tab
+                myAppendTable += "<a href='#' class='list-group-item'>" + n + "</a>";
         };
         
         myAppendTable += "</div>";
-        $('#disruptions').append(myAppendTable);
+        $('#edit').append(myAppendTable);
 }
 
 function oops(data) {
@@ -86,14 +121,20 @@ $(document).ready(function() {
         
     console.log("I'm in doc ready");
     var d = new Date();
+    $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE');
     
     checkDisruptionsDb(function(data)
     {
         console.log("I'm in check disruptions");
         console.log(data);
+        
+        
         if ((d.getTime() - data[0].timestamp) < 120000) {
             console.log("NOT outdated!");
+            $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE');
             parseData(data);
+            console.log("I've now finished parseData");
+            $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE2');
         }
         else {
             console.log("YES outdated");
@@ -106,17 +147,19 @@ $(document).ready(function() {
                 });
             });
         }
+        $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE3');
     });
     
     checkStationList(function(data) {
         if ((d.getTime() - data[0].timestamp) < 86400000) {
             console.log("NOT outdated STATIONS!");
+            parseStationData(data);
         }
         else {
             console.log("YES outdated STATIONS");
             populateStationList(function(data)
             {
-                console.log("backfrom populateStationlist" + data);
+                console.log("backfrom populateStationlist");
             });
         }
     });

@@ -155,19 +155,19 @@ router.stationlistcheck = function(req, res) {
     pg.connect(connectionString, function(err, client, done) {
         
         // SQL Query > Select Data
-        var query = client.query("SELECT * FROM stationlist ORDER BY id ASC limit 1");
+        var query = client.query("SELECT * FROM stationlist ORDER BY name ASC");
         console.log("post-query");
         // Stream results back one row at a time
         query.on('row', function(row) {
             results.push(row);
-            console.log("row is " + row.route);
+            //console.log("row is " + row.route);
         });
         console.log("postquery.on");
 
         // After all data is returned, close connection and return results
         query.on('end', function() {
             client.end();
-            console.log("results is + " + results);
+            //console.log("results is + " + results);
             return res.json(results);
         });
 

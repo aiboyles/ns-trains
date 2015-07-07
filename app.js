@@ -28,6 +28,8 @@ app.get('/', routes.index);
 app.get('/disruptions', routes.disruptions);
 app.get('/disruptionsdb', routes.disruptionsdb);
 app.post('/disruptionsdbinsert', routes.disruptionsdbinsert);
+app.get('/stationlist', routes.stationlist);
+app.get('/stationlistcheck', routes.stationlistcheck);
 //app.put('/disruptionsdbupdate/:route', routes.disruptionsdbupdate);*/
 
 // catch 404 and forward to error handler

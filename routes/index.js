@@ -1,11 +1,31 @@
 var express = require('express');
 var disruptions = require('../logic/disruptions');
 var router = express.Router();
+var async = require('async');
 var pg = require('pg');
 var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/annboyles';
 var pgpLib = require('pg-promise');
 var pgp = pgpLib();
 var promise = require('bluebird');
+var request = require('request');
+var cheerio = require('cheerio');
+var config = require('../config');
+
+
+var url = "http://webservices.ns.nl/ns-api-stations";
+
+var configValues = {
+        username: config.gebruikers_naam,
+        access_token: config.wachtwoord
+};
+
+var options = {
+    url: url,
+    auth: {
+        user: configValues.username,
+        password: configValues.access_token
+    }
+}
 
 router.index = function(req, res) {
   res.render('index', {
@@ -124,26 +144,30 @@ router.disruptionsdbinsert = function(req, res) {
         }
     });*/
     console.log("i have finished insertIntoDB");
+    return res.json("hurray");
 }
-/*
-router.disruptionsdbread = function(req, res) {
 
+router.stationlistcheck = function(req, res) {
+    console.log("I am in stationlistcheck");
     var results = [];
 
     // Get a Postgres client from the connection pool
     pg.connect(connectionString, function(err, client, done) {
-
+        
         // SQL Query > Select Data
-        var query = client.query("SELECT * FROM disruptions ORDER BY id ASC;");
-
+        var query = client.query("SELECT * FROM stationlist ORDER BY id ASC limit 1");
+        console.log("post-query");
         // Stream results back one row at a time
         query.on('row', function(row) {
             results.push(row);
+            console.log("row is " + row.route);
         });
+        console.log("postquery.on");
 
         // After all data is returned, close connection and return results
         query.on('end', function() {
             client.end();
+            console.log("results is + " + results);
             return res.json(results);
         });
 
@@ -155,6 +179,72 @@ router.disruptionsdbread = function(req, res) {
     });
 };
 
+router.stationlist = function(req, res) {
+    var results = [];
+
+    async.waterfall([
+        function makeApiCall(callback) {
+            request(options, function (err, res, body) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    // read XML results into cheerio
+                    console.log("in else");
+                    var $ = cheerio.load(body, {
+                    xmlMode: true
+                    });
+                    callback(null, $);
+                }
+            });
+        },
+        
+        function createStationArray($, callback) {
+            var stationArray = [];
+            var iterator = 0;
+            $('stations').children().each(function(i, elm) {
+                if (($(this).find('name').text() != false) && ($(this).find('country').text() == 'NL')) {
+                    stationArray[iterator] = {
+                                name: $(this).find('name').text(),
+                                code: $(this).find('code').text(),
+                            };
+                    iterator++;
+                }
+            });
+        callback(null, stationArray);
+        },
+        
+    function insertArray(stationArray, callback) {
+            var tempDay = new Date();
+        var tempTimeStamp = tempDay.getTime();
+        var db = pgp(connectionString);
+    
+        function factory(idx) {
+            if (idx < stationArray.length) {
+                return this.none("INSERT INTO stationlist(name, code, timestamp) values($1, $2, $3)", [stationArray[idx].name, stationArray[idx].code, tempTimeStamp]);
+            }
+        }
+    
+    db.tx(function () {
+        return promise.all([
+            this.none('DELETE FROM stationlist'),
+            this.sequence(factory)
+                ]);
+        })
+        .then(function () {
+            console.log("success!");
+        }, function (reason) {
+            console.log(reason); // print error;
+        });
+
+    }
+        ], function (err, result) {
+        console.log("at end of waterfall");
+        callback("HURRAY STATIONS");
+    });
+    res.json("HURRAY STATIONS");
+};
+
+/*
 router.disruptionsdbupdate = function(req, res) {
 
     var results = [];

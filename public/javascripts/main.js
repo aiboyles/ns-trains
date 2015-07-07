@@ -49,6 +49,16 @@ function checkDisruptionsDb(callback) {
         });
 }
 
+function checkStationList(callback) {
+    console.log("I'm in checkStationList");
+        $.ajax({
+            type: 'GET',
+            url: '../stationlistcheck',
+            success: callback,
+            error: oops
+        });
+}
+
 function insertDisruptionsDb(results, callback) {
     console.log("I'm in insertDisruptionsDb");
     console.log("data is: " + results[0].route);
@@ -57,6 +67,16 @@ function insertDisruptionsDb(results, callback) {
             url: '../disruptionsdbinsert',
             data: {results : results,
                    resultslength: results.length},
+            success: callback,
+            error: oops
+        });
+}
+
+function populateStationList(callback) {
+    console.log("I'm in populateStationlist");
+        $.ajax({
+            type: 'GET',
+            url: '../stationlist',
             success: callback,
             error: oops
         });
@@ -82,12 +102,25 @@ $(document).ready(function() {
                 console.log("I'm in popDisrup");
                 parseData(data);
                 insertDisruptionsDb(data, function(results) {
-                    console.log("insert COMPLETED");
+                    console.log("insert COMPLETED" + results);
                 });
             });
         }
     });
     
+    checkStationList(function(data) {
+        if ((d.getTime() - data[0].timestamp) < 86400000) {
+            console.log("NOT outdated STATIONS!");
+        }
+        else {
+            console.log("YES outdated STATIONS");
+            populateStationList(function(data)
+            {
+                console.log("backfrom populateStationlist" + data);
+            });
+        }
+    });
+
     /*
     populateDisruptions(function(data)
     {

@@ -21,23 +21,29 @@ html
                         a(data-toggle="tab" href="#trip-planner") Trip Planner
                 .tab-content
                     .tab-pane.fade.in.active#departures
-                        ul.nav.nav-pills
-                            li
-                                a(data-toggle="pill" href="#edit") Edit
-                            li
-                                a(data-toggle="pill" href="#add") Add Station
+                        ul.tabs
+                            li.tab-link.current(data-tab="tab-1") Stations
+                            li.tab-link(data-tab="tab-2") Edit
+                            li.tab-link(data-tab="tab-3") Add Station
                         .tab-content(style="width:auto; height:auto; padding-left:0px;")
-                            p Departures section here.
-                            .tab-pane.fade#edit
+                            .sub-tab-content.current#tab-1
+                                p Departures section here
+                            .sub-tab-content#tab-2
                                 p Edit section
-                            .tab-pane.fade#add
-                                p Add station
+                            .sub-tab-content#tab-3
+                                .inputgroup#add-inner
+                                span.input-group-addon Filter
+                                input(id='filter' type='text' class='form-control' placeholder='Search...')
                     .tab-pane.fade#disruptions-tab
                         p Loading...
                     .tab-pane.fade#trip-planner
                         p This is the trip planner area.
+                        .input.group#trip-inner
+                        span.input-group-addon Filter
+                        input(id='filter2' type='text' class='filter2' placeholder='Search...')
     
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js')
     script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js')
     script(src='//cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js')
+    script (src='javascripts/bootstrap-list-filter.min.js')
     script(src='javascripts/main.js')

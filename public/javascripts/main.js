@@ -1,13 +1,7 @@
 function parseData(data) {
     console.log("I'm in parseData");
-    console.log(data);
-    //console.log(data);
     
-    $('#disruptions-tab').html('LOADINGLOADING'); 
-    
-    $('#trip-planner').html('TRALALALALLAAAAA');
-    
-    $('#departures').html('bblumbllkdlkj');
+    $('#disruptions-tab').html(''); 
     
     var myAppendTable = "<div class='panel-group' id='accordion'>";
 
@@ -21,15 +15,11 @@ function parseData(data) {
                             + "<a data-toggle='collapse' data-parent='#accordion' href='#collapse" + i.toString() + "'>"
                             + r + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
                             + "<div class='panel-body'><p>" + m + "</div></div></div>";
-            console.log("in loop " + i);
             };
         
-        //console.log(myAppendTable);
         myAppendTable += "</div>";
-        console.log(myAppendTable);
         $('#disruptions-tab').html(myAppendTable);
     
-        console.log("I've now appended it");
         /*$('li[id=disruptionstab]').html('');
         var tabAppend = "<a data-toggle='tab' href='#disruptions'>Disruptions <span class='badge badge-info'>"
                             + data.length + "</span></a>";
@@ -39,12 +29,12 @@ function parseData(data) {
 
 function parseStationData(data) {
     console.log("I'm in parseDataStation");
-    //console.log(data);
-    //console.log(data);
     
-    $('#disruptions').html(''); 
+    $('#add-inner').html(''); 
     
-    var myAppendTable = "<div class='list-group'>";
+    var myAppendTable = "<div class='input group'><span class='input-group-addon'>Filter</span>" +
+                    "<input id='filter' type='text' class='form-control' placeholder='Search...'></div>"  +
+            "<div id='searchlist' class='list-group'>";
     
     // loop through the disruptions
         for (var i = 0; i < data.length; i++) {
@@ -52,11 +42,12 @@ function parseStationData(data) {
                 c = data[i].code;
             
                 // add bootstrap accordion to disruptions tab
-                myAppendTable += "<a href='#' class='list-group-item'>" + n + "</a>";
+                myAppendTable += "<a href='#' class='list-group-item' id='" + c + "'>" + n + "</a>";
         };
         
         myAppendTable += "</div>";
-        $('#edit').append(myAppendTable);
+        $('#tab-3').html(myAppendTable);
+        //$('#searchlist').btsListFilter('#searchinput', {itemChild: 'span'});
 }
 
 function oops(data) {
@@ -96,7 +87,6 @@ function checkStationList(callback) {
 
 function insertDisruptionsDb(results, callback) {
     console.log("I'm in insertDisruptionsDb");
-    console.log("data is: " + results[0].route);
         $.ajax({
             type: 'POST',
             url: '../disruptionsdbinsert',
@@ -117,24 +107,59 @@ function populateStationList(callback) {
         });
 }
 
+$(document).keyup(function(event) {
+        var rex = new RegExp($('#filter').val(), 'i');
+        $('.list-group-item').hide();
+            $('.list-group-item').filter(function() {
+                return rex.test($(this).text());
+            }).show();
+});
+
+function setCookie(cname, cvalue1, cvalue2) {
+    var d = new Date();
+    d.setTime(d.getTime() + (1825*24*60*60*1000)); // expires in 5 years
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue1 + "," + cvalue2 + "; " + expires;
+}
+
+function getCookie(cname) {
+    console.log("IN GET COOKIE");
+    var name = cname + "=";
+    console.log("cookie is " + document.cookie);
+    var ca = document.cookie.split(';');
+    for (var i=0; i< ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') {
+            c = c.substring(1);
+            console.log("c is " + c);
+        if (c.indexOf(name) == 0) {
+            console.log("c.substring" + c.substring(name.length,c.length));
+            return c.substring(name.length,c.length);
+        }
+        }
+    }
+    return "";
+}
+
 $(document).ready(function() {
         
     console.log("I'm in doc ready");
     var d = new Date();
     $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE');
     
+    getCookie();
+    
     checkDisruptionsDb(function(data)
     {
         console.log("I'm in check disruptions");
         console.log(data);
         
-        
-        if ((d.getTime() - data[0].timestamp) < 120000) {
-            console.log("NOT outdated!");
-            $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE');
-            parseData(data);
-            console.log("I've now finished parseData");
-            $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE2');
+        if ((data.length > 0) && ((d.getTime() - data[0].timestamp) < 120000)) {
+                console.log("NOT outdated!");
+                $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE');
+                parseData(data);
+                console.log("I've now finished parseData");
+                $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE2');
         }
         else {
             console.log("YES outdated");
@@ -163,21 +188,24 @@ $(document).ready(function() {
             });
         }
     });
-
-    /*
-    populateDisruptions(function(data)
-    {
-        console.log("I'm in document ready");
-        parseData(data);                
+    
+    $("div#departures").on('click', 'a.list-group-item', function () {
+        console.log("CLICKED " + $(this).text() + " code " + $(this).attr('id'));
+        setCookie($(this).attr('id'), $(this).text(), $(this).attr('id'));
+        $('ul.tabs li').removeClass('current');
+		$('.sub-tab-content').removeClass('current');
+        $('[data-tab="tab-1"]').addClass('current');
+		$('#tab-1').addClass('current');
     });
-        // tab behavior
-    $(".nav-tabs a").click(function(event) {
-        event.preventDefault();
-        $(this).parent().addClass("active");
-        $(this).parent().siblings().removeClass("active");
-        var tab = $(this).attr("href");
-        $(".tab-content").not(tab).css("display", "none");
-        $(tab).fadeIn();
-    });*/
+    
+    $('ul.tabs li').click(function(){
+		var tab_id = $(this).attr('data-tab');
+
+		$('ul.tabs li').removeClass('current');
+		$('.sub-tab-content').removeClass('current');
+
+		$(this).addClass('current');
+		$("#"+tab_id).addClass('current');
+	});
 
 });

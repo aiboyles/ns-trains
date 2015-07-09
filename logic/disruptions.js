@@ -40,14 +40,14 @@ function addDays(date, days) {
 }
 
 function dbCheck() {
-            console.log("I am in checkDisruptions");
+            //console.log("I am in checkDisruptions");
             var results = [];
             var outDated = true;
             
-            console.log("I am in checkDisruptions pre-connect");
+            //console.log("I am in checkDisruptions pre-connect");
     
             var db = pgp(connectionString);
-            console.log("post-connect");
+            //console.log("post-connect");
             db.query("SELECT * FROM disruptions ORDER BY timestamp DESC limit 1", true)
                 .then(function (data) {
                     console.log(data); // print data;
@@ -102,7 +102,7 @@ function dbCheck() {
                     client.end();
                 });
             });*/
-    console.log("tempCallback is : " + tempCallback);
+    //console.log("tempCallback is : " + tempCallback);
     return tempCallback;
 }
 
@@ -111,13 +111,13 @@ module.exports = function(callbackFinal) {
         
         // pull disruptions information from NS API
         function makeRequest(callbackMakeRequest) {
-            console.log("I'm in makeRequest");
+            //console.log("I'm in makeRequest");
             request(options, function (err, res, body) {
                 if (err) {
                     console.log(err);
                 } else {
                     // read XML results into cheerio
-                    console.log("in else");
+                    //console.log("in else");
                     var $ = cheerio.load(body, {
                     xmlMode: true
                     });
@@ -128,7 +128,7 @@ module.exports = function(callbackFinal) {
         
         // process the unplanned events from NS API
         function processUnplannedEvents($, callback) {
-            console.log("I'm in processUnplannedEvents");
+            //console.log("I'm in processUnplannedEvents");
             var disruptions = [];
             var iterator = 0;
             $('Ongepland').children().each(function(i, elm) {
@@ -148,7 +148,7 @@ module.exports = function(callbackFinal) {
         
         // then process the planned events
         function processPlannedEvents($, disruptions, callback) {
-            console.log("just before planned");
+            //console.log("just before planned");
             // next, handle the planned disruptions
             var iterator = disruptions.length;
             
@@ -229,7 +229,7 @@ module.exports = function(callbackFinal) {
             callback(null, disruptions);
         }  */            
     ], function (err, result) {
-        console.log("at end of waterfall");
+        //console.log("at end of waterfall");
         callbackFinal(result);
     });
 

@@ -36,7 +36,7 @@ router.index = function(req, res) {
 
 router.disruptions = function(req, res) {
     disruptions(function (data) {
-        console.log("DATA IS :" + data);
+        //console.log("DATA IS :" + data);
         res.json(data);
     });
 };
@@ -56,12 +56,12 @@ console.log("post-query");
             results.push(row);
             console.log("row is " + row.route);
         });
-        console.log("postquery.on");
+        //console.log("postquery.on");
 
         // After all data is returned, close connection and return results
         query.on('end', function() {
             client.end();
-            console.log("results is + " + results);
+            //console.log("results is + " + results);
             return res.json(results);
         });
 
@@ -82,7 +82,7 @@ router.departures = function(req, res) {
 };
 
 router.departuresdb = function(req, res) {
-    console.log("I am in departuresdb");
+    //console.log("I am in departuresdb");
     var results = [];
   
     // Get a Postgres client from the connection pool
@@ -90,13 +90,13 @@ router.departuresdb = function(req, res) {
         
         // SQL Query > Select Data
         var query = client.query("SELECT * FROM departures ORDER BY stationid ASC");
-        console.log("post-query");
+        //console.log("post-query");
         // Stream results back one row at a time
         query.on('row', function(row) {
             results.push(row);
-            console.log("row departures is " + row.stationid);
+            //console.log("row departures is " + row.stationid);
         });
-        console.log("postquery.on");
+        //console.log("postquery.on");
 
         // After all data is returned, close connection and return results
         query.on('end', function() {
@@ -114,17 +114,17 @@ router.departuresdb = function(req, res) {
 };
 
 router.departuresdbinsert = function(req, res) {
-    console.log("in routerdepart");
+    //console.log("in routerdepart");
     var tempDay = new Date();
     var tempTimeStamp = tempDay.getTime();
-    console.log("tempDay is : " + tempDay.getTime());
+    //console.log("tempDay is : " + tempDay.getTime());
     //console.log(req.body);
     var departures = req.body;
     //console.log(req.body);
-    console.log("length is : " + req.body.resultslength);
-    console.log("something is " + departures["results[0][stationname]"]);
+    //console.log("length is : " + req.body.resultslength);
+    //console.log("something is " + departures["results[0][stationname]"]);
     //console.log(disruptions);
-    console.log("I am in disruptionsdbinsert " + departures['results[0][stationname]']);
+    //console.log("I am in disruptionsdbinsert " + departures['results[0][stationname]']);
     
     var db = pgp(connectionString);
     
@@ -146,22 +146,22 @@ router.departuresdbinsert = function(req, res) {
         }, function (reason) {
             console.log(reason); // print error;
         });
-    console.log("i have finished insertIntoDB");
+    //console.log("i have finished insertIntoDB");
     return res.json("hurray");
 }
 
 router.disruptionsdbinsert = function(req, res) {
-    console.log("in routerdisrup");
+    //console.log("in routerdisrup");
     var tempDay = new Date();
     var tempTimeStamp = tempDay.getTime();
-    console.log("tempDay is : " + tempDay.getTime());
+    //console.log("tempDay is : " + tempDay.getTime());
     //console.log(req.body);
     var disruptions = req.body;
     //console.log(req.body);
-    console.log("length is : " + req.body.resultslength);
-    console.log("something is " + disruptions["results[0][route]"]);
+    //console.log("length is : " + req.body.resultslength);
+    //console.log("something is " + disruptions["results[0][route]"]);
     //console.log(disruptions);
-    console.log("I am in disruptionsdbinsert " + disruptions['results[0][route]']);
+    //console.log("I am in disruptionsdbinsert " + disruptions['results[0][route]']);
     
     var db = pgp(connectionString);
     
@@ -221,12 +221,12 @@ router.disruptionsdbinsert = function(req, res) {
             console.log(err);
         }
     });*/
-    console.log("i have finished insertIntoDB");
+    //console.log("i have finished insertIntoDB");
     return res.json("hurray");
 }
 
 router.stationlistcheck = function(req, res) {
-    console.log("I am in stationlistcheck");
+    //console.log("I am in stationlistcheck");
     var results = [];
 
     // Get a Postgres client from the connection pool
@@ -234,13 +234,13 @@ router.stationlistcheck = function(req, res) {
         
         // SQL Query > Select Data
         var query = client.query("SELECT * FROM stationlist ORDER BY name ASC");
-        console.log("post-query");
+        //console.log("post-query");
         // Stream results back one row at a time
         query.on('row', function(row) {
             results.push(row);
             //console.log("row is " + row.route);
         });
-        console.log("postquery.on");
+        //console.log("postquery.on");
 
         // After all data is returned, close connection and return results
         query.on('end', function() {
@@ -267,7 +267,7 @@ router.stationlist = function(req, res) {
                     console.log(err);
                 } else {
                     // read XML results into cheerio
-                    console.log("in else");
+                    //console.log("in else");
                     var $ = cheerio.load(body, {
                     xmlMode: true
                     });
@@ -316,7 +316,7 @@ router.stationlist = function(req, res) {
 
     }
         ], function (err, result) {
-        console.log("at end of waterfall");
+        //console.log("at end of waterfall");
         callback("HURRAY STATIONS");
     });
     res.json("HURRAY STATIONS");

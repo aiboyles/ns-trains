@@ -31,6 +31,11 @@ app.get('/disruptionsdb', routes.disruptionsdb);
 app.post('/disruptionsdbinsert', routes.disruptionsdbinsert);
 app.get('/stationlist', routes.stationlist);
 app.get('/stationlistcheck', routes.stationlistcheck);
+app.post('/departures', routes.departures);
+app.get('/departuresdb', routes.departuresdb);
+app.post('/departuresdbinsert', routes.departuresdbinsert);
+
+
 //app.put('/disruptionsdbupdate/:route', routes.disruptionsdbupdate);*/
 
 // catch 404 and forward to error handler

@@ -1,5 +1,6 @@
 var express = require('express');
 var disruptions = require('../logic/disruptions');
+var departures = require('../logic/departures');
 var router = express.Router();
 var async = require('async');
 var pg = require('pg');
@@ -71,6 +72,83 @@ console.log("post-query");
 
     });
 };
+
+router.departures = function(req, res) {
+    console.log("req is " + req.body.data);
+    departures(req.body.data, function (data) {
+        console.log("DATA from departures IS :" + data);
+        res.json(data);
+    });
+};
+
+router.departuresdb = function(req, res) {
+    console.log("I am in departuresdb");
+    var results = [];
+  
+    // Get a Postgres client from the connection pool
+    pg.connect(connectionString, function(err, client, done) {
+        
+        // SQL Query > Select Data
+        var query = client.query("SELECT * FROM departures ORDER BY stationid ASC");
+        console.log("post-query");
+        // Stream results back one row at a time
+        query.on('row', function(row) {
+            results.push(row);
+            console.log("row departures is " + row.stationid);
+        });
+        console.log("postquery.on");
+
+        // After all data is returned, close connection and return results
+        query.on('end', function() {
+            client.end();
+            console.log("results is + " + results);
+            return res.json(results);
+        });
+
+        // Handle Errors
+        if(err) {
+          console.log(err);
+        }
+
+    });
+};
+
+router.departuresdbinsert = function(req, res) {
+    console.log("in routerdepart");
+    var tempDay = new Date();
+    var tempTimeStamp = tempDay.getTime();
+    console.log("tempDay is : " + tempDay.getTime());
+    //console.log(req.body);
+    var departures = req.body;
+    //console.log(req.body);
+    console.log("length is : " + req.body.resultslength);
+    console.log("something is " + departures["results[0][stationname]"]);
+    //console.log(disruptions);
+    console.log("I am in disruptionsdbinsert " + departures['results[0][stationname]']);
+    
+    var db = pgp(connectionString);
+    
+    function factory(idx) {
+        if (idx < req.body.resultslength) {
+            var tempString = "results[" + idx + "]";
+            return this.none("INSERT INTO departures(stationid, stationname, destination, departuretime, traintype, route, platform, platformchange, delay, timestamp) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", [departures[tempString + "[stationid]"], departures[tempString + "[stationname]"], departures[tempString + "[destination]"], departures[tempString + "[departuretime]"], departures[tempString + "[traintype]"], departures[tempString + "[route]"], departures[tempString + "[platform]"], departures[tempString + "[platformchange]"], departures[tempString + "[delay]"], tempTimeStamp]);
+        }
+    }
+    
+    db.tx(function () {
+        return promise.all([
+            this.none('DELETE FROM departures'),
+            this.sequence(factory)
+                ]);
+        })
+        .then(function () {
+            console.log("success!");
+        }, function (reason) {
+            console.log(reason); // print error;
+        });
+    console.log("i have finished insertIntoDB");
+    return res.json("hurray");
+}
 
 router.disruptionsdbinsert = function(req, res) {
     console.log("in routerdisrup");

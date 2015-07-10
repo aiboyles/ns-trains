@@ -25,15 +25,17 @@ function oops(data) {
 function parseDisruptionsData(data) {
     $('#disruptions-tab').html(''); 
     var appendDiv = "<div class='panel-group' id='accordion'>";
+    
     for (var i = 0; i < data.length; i++) {
         var t = data[i].type,
             r = data[i].route,
             m = data[i].message;
+        
         // add bootstrap accordion to disruptions tab
         appendDiv += "<div class='panel panel-default'><div class='panel-heading'><h4 class='panel-title'>"
-                + "<a data-toggle='collapse' data-parent='#accordion' href='#collapse" + i.toString() + "'>"
-                + r + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
-                + "<div class='panel-body'><p>" + m + "</div></div></div>";
+                + "<a data-toggle='collapse' data-parent='#accordion' href='#collapsedis" + i.toString() + "'>"
+                + r + "</a></h4></div><div id='collapsedis" + i.toString() + "' class='panel-collapse collapse'>"
+                + "<div class='panel-body'>" + m + "</div></div></div>";
     };
         
     appendDiv += "</div>";
@@ -60,17 +62,19 @@ function parseStationData(data) {
     $('#tab-3').html(appendDiv);
 }
 
+// has to populates the departures tab AND "edit" tab
 function parseDeparturesData(data) {
     var cookies = getCookie();
     $('#tab-1').html(''); 
+    $('#tab-2').html(''); 
     var appendDiv = "<div class='panel-group' id='accordion'>";
+    var editDiv = "<button class='btn btn-danger' id='deletebutton' type='submit'>Delete</button><br><p>";
     
     for (var i = 0; i < cookies.length; i++) {
         var co = cookies[i].code,
             na = cookies[i].name;
             
         var depArray = $.grep(data, function(n, i) {
-                        console.log("n.stationid is " + n.stationid);
                         return (n.stationid == co);
                     });
 
@@ -87,10 +91,14 @@ function parseDeparturesData(data) {
                     + "<tr><td style='text-align:right'>3 BLIP</td></tr></table></td></tr></table>"
                     + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
                     + "<div class='panel-body'><p>" + str + "</p></div></div></div>";
+        
+        editDiv += "<input type='checkbox' name='" + co + "'> " + na + "<br>";
     };
         
     appendDiv += "</div>";
+    editDiv += "</p>";
     $('#tab-1').html(appendDiv);
+    $("#tab-2").html(editDiv);
 }
 
 // AJAX call functions

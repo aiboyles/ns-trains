@@ -68,7 +68,6 @@ function asyncWhilst(stationArray, callbackWhilst) {
                     $('ActueleVertrekTijden').children().each(function(i, elm) {
                         $(this).append("<stationid>" + stationArray[count].code + "</stationid>");
                         $(this).append("<stationname>" + stationArray[count].name + "</stationname>");
-                        console.log("stationname internal : " + $(this).find('stationname').text());
                     });
                     apiArray.push($);
                     count++;

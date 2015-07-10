@@ -5,8 +5,6 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-//var jsdom = require('jsdom').jsdom;
-
 var routes = require('./routes');
 var users = require('./routes/users');
 
@@ -34,9 +32,6 @@ app.get('/stationlistcheck', routes.stationlistcheck);
 app.post('/departures', routes.departures);
 app.get('/departuresdb', routes.departuresdb);
 app.post('/departuresdbinsert', routes.departuresdbinsert);
-
-
-//app.put('/disruptionsdbupdate/:route', routes.disruptionsdbupdate);*/
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

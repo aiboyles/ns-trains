@@ -13,7 +13,6 @@ var pgp = pgpLib();
 
 var url = "https://webservices.ns.nl/ns-api-storingen?actual=true&unplanned=true";
 var today = new Date();
-//var disruptions = []; // disruptions array stores all relevant disruptions
 var iterator = 0;
 
 var months = {'jan':'0', 'feb':'1', 'mrt':'2', 'apr':'3', 'mei':'4', 'jun':'5', 'jul':'6', 'aug':'7', 'sep':'8', 'okt':'9', 'nov':'10', 'dec':'11'};
@@ -33,91 +32,21 @@ var options = {
     }
 }
 
+// helper functions
 function addDays(date, days) {
     var result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
 }
 
-function dbCheck() {
-            //console.log("I am in checkDisruptions");
-            var results = [];
-            var outDated = true;
-            
-            //console.log("I am in checkDisruptions pre-connect");
-    
-            var db = pgp(connectionString);
-            //console.log("post-connect");
-            db.query("SELECT * FROM disruptions ORDER BY timestamp DESC limit 1", true)
-                .then(function (data) {
-                    console.log(data); // print data;
-                }, function (reason) {
-                    console.log(reason); // print error;
-                });
-    
-    
-    
-    /*
-            pg.connect(connectionString, function(err, client, done) {
-                console.log("error is " + err);
-                console.log("I am in checkDisruptions2");
-                // SQL Query > Select Data
-                var query = client.query("SELECT * FROM disruptions ORDER BY timestamp DESC limit 1;");
-
-                // Stream results back one row at a time
-                query.on('row', function(row) {
-                    console.log("in checkDisruptions row " + row.route);
-                    var d = new Date();
-                    console.log("d.gettime is " + d.getTime() + " and row.timestamp is " + row.timestamp);
-                    if ((d.getTime() - row.timestamp) < 120000) {
-                        console.log("in if loop");
-                        console.log("d.gettime is " + d.getTime() + " and row.timestamp is " + row.timestamp);
-                        console.log("outdated is : " + outDated);
-                        // grab values from db and return in disruptions
-                        var disruptions = [];
-                        var iterator = 0;
-                        query = client.query("SELECT * FROM disruptions ORDER BY id ASC;");
-                        query.on('row', function(row) {
-                            disruptions[iterator] = {
-                                type: row.type,
-                                date: '',
-                                period: '',
-                                route: row.route,
-                                reason: '',
-                                advice: '',
-                                message: row.message
-                            };
-                            iterator++;
-                        });
-                        done();
-                        query.on('end', function() {
-                            client.end();
-                        });
-                        console.log("just before callbackFinal" + row.route);
-                        tempCallback = disruptions;
-                    }
-                });
-                // After all data is returned, close connection and return results
-                query.on('end', function() {
-                    client.end();
-                });
-            });*/
-    //console.log("tempCallback is : " + tempCallback);
-    return tempCallback;
-}
-
 module.exports = function(callbackFinal) {
     async.waterfall([
-        
         // pull disruptions information from NS API
         function makeRequest(callbackMakeRequest) {
-            //console.log("I'm in makeRequest");
             request(options, function (err, res, body) {
                 if (err) {
                     console.log(err);
                 } else {
-                    // read XML results into cheerio
-                    //console.log("in else");
                     var $ = cheerio.load(body, {
                     xmlMode: true
                     });
@@ -128,7 +57,6 @@ module.exports = function(callbackFinal) {
         
         // process the unplanned events from NS API
         function processUnplannedEvents($, callback) {
-            //console.log("I'm in processUnplannedEvents");
             var disruptions = [];
             var iterator = 0;
             $('Ongepland').children().each(function(i, elm) {
@@ -148,8 +76,6 @@ module.exports = function(callbackFinal) {
         
         // then process the planned events
         function processPlannedEvents($, disruptions, callback) {
-            //console.log("just before planned");
-            // next, handle the planned disruptions
             var iterator = disruptions.length;
             
             $('Gepland').children().each(function(i, elm) {
@@ -198,39 +124,8 @@ module.exports = function(callbackFinal) {
                 }
             });
             callback(null, disruptions);
-        }
-        
-        /*function insertIntoDb(disruptions, callback) {
-            console.log("in insertIntoDB");
-
-            // enter everything in disruptions in the database
-                var tempDay = new Date();
-                var tempTimeStamp = tempDay.getTime();
-                pg.connect(connectionString, function(err, client, done) {
-                    console.log("I am in pg.connect and length is " + disruptions.length);
-                    // first remove everything from the table
-                    client.query("DELETE * FROM disruptions");
-                    console.log("deletion complete");
-                    // SQL Query > Select Data
-                    for (j=0; j < disruptions.length; j++)
-                    {
-                        console.log("route is : " + disruptions[j].route);
-                        client.query("INSERT INTO disruptions(type, route, message, timestamp) values($1, $2, $3, $4)", [disruptions[j].type, disruptions[j].route, disruptions[j].message, tempTimeStamp]);
-                    }
-                    console.log("I have finished the loop");
-                    client.end();
-                    
-                    // Handle Errors
-                    if(err) {
-                        console.log(err);
-                    }
-                });
-            console.log("i have finished insertIntoDB");
-            callback(null, disruptions);
-        }  */            
+        }            
     ], function (err, result) {
-        //console.log("at end of waterfall");
         callbackFinal(result);
     });
-
 }

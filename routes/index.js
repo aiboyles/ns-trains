@@ -76,8 +76,8 @@ console.log("post-query");
 router.departures = function(req, res) {
     console.log("req is " + req.body.data);
     departures(req.body.data, function (data) {
-        console.log("DATA from departures IS :" + data);
-        res.json(data);
+        //console.log("DATA from departures IS :" + data);
+        return res.json(data);
     });
 };
 

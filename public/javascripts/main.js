@@ -63,24 +63,30 @@ function parseDeparturesData(data) {
     $('#tab-1').html(''); 
     
     var myAppendTable = "<div class='panel-group' id='accordion'>";
+    
+    console.log("initial data thing : " + data[0].stationid);
 
         for (var i = 0; i < cookies.length; i++) {
-            var c = cookies[i].code,
-                n = cookies[i].name;
+            var co = cookies[i].code,
+                na = cookies[i].name;
             
+            console.log("co is " + co);
             var depArray = $.grep(data, function(n, i){
-                        return (n.stationid == c);
+                        console.log("n.stationid is " + n.stationid);
+                        return (n.stationid == co);
                     });
+            console.log("datalength is : " + data.length);
+            console.log("depArray length is : " + depArray.length);
             
-            var str = ""
+            var str = "";
             for (var j = 0; j < depArray.length; j++) {
-                str += parseTime(depArray[j].departuretime) + " " + n + " " + depArray[j].platform + "<br>";
+                str += parseTime(depArray[j].departuretime) + " " + na + " " + depArray[j].platform + "<br>";
             }
             
                 // add bootstrap accordion to departures tab
                 myAppendTable += "<div class='panel panel-default'><div class='panel-heading'><h4 class='panel-title'>"
                             + "<a data-toggle='collapse' data-parent='#accordion' href='#collapse" + i.toString() + "'>"
-                            + "<table border=1 style='width:100%'><tr><td>" + n + "</td><td>"
+                            + "<table border=1 style='width:100%'><tr><td>" + na + "</td><td>"
                             + "<table border=0 style='width:100%'><tr><td style='text-align:right'>1 BALH</td></tr><tr><td style='text-align:right'>2 BLOB</td></tr>" 
                             + "<tr><td style='text-align:right'>3 BLIP</td></tr></table></td></tr></table>"
                             + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
@@ -215,8 +221,8 @@ function getCookie() {
     for (var i=0; i< ca.length; i++) {
         //var c = ca[i];
         var c = ca[i].split('=');
-        var stationItem = { code : c[0],
-                            name : c[1] };
+        var stationItem = { name : c[0],
+                            code : c[1] };
         cookieArray.push(stationItem);
         console.log("code is " + c[0].trim() + " station is " + c[1].trim());
         /*while (c.charAt(0)==' ') {
@@ -273,7 +279,6 @@ $(document).ready(function() {
                 });
             });
         }
-        $('#disruptions').html('LOADINGLOADINGOUTSIDEHERE3');
     });
     
     

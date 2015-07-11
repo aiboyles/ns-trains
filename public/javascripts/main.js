@@ -1,7 +1,7 @@
 // helper functions
 function parseTime(timeString) {
-    var temp = timeString.substr(11, 15);
-    if (temp[0] == '0')
+    var temp = timeString.substr(11, 5);
+    if (temp[0] === '0')
     {
         temp = temp.substr(1, 4);
     }
@@ -23,6 +23,11 @@ function oops(data) {
 
 // functions for populating tabs
 function parseDisruptionsData(data) {
+    var glyphs = [];
+    
+    glyphs['unplanned'] = "<span class='glyphicon glyphicon-alert' aria-hidden='true'></span>";
+    glyphs['planned'] = "<span class='glyphicon glyphicon-info-sign' aria-hidden='true'></span>";
+
     $('#disruptions-tab').html('');
     
     $('li#disruptionstab').html('<a data-toggle="tab" href="#disruptions-tab">Disruptions <span class="badge">' + data.length + '</span></a></li>');
@@ -35,9 +40,10 @@ function parseDisruptionsData(data) {
             m = data[i].message;
         
         // add bootstrap accordion to disruptions tab
-        appendDiv += "<div class='panel panel-default'><div class='panel-heading'><h4 class='panel-title'>"
+        appendDiv += "<div class='panel panel-default'><div class='panel-heading'><h3 class='panel-title'>"
                 + "<a data-toggle='collapse' data-parent='#accordion' href='#collapsedis" + i.toString() + "'>"
-                + r + "</a></h4></div><div id='collapsedis" + i.toString() + "' class='panel-collapse collapse'>"
+                + glyphs[t] + " "
+                + r + "</a></h3></div><div id='collapsedis" + i.toString() + "' class='panel-collapse collapse'>"
                 + "<div class='panel-body'>" + m + "</div></div></div>";
     };
         
@@ -72,6 +78,7 @@ function parseDeparturesData(data) {
     $('#tab-2').html(''); 
     var appendDiv = "<div class='panel-group' id='accordion'>";
     var editDiv = "<button class='btn btn-danger' id='deletebutton' type='button'>Delete</button><hr>";
+    var departuresLength = 10;
     
     for (var i = 0; i < cookies.length; i++) {
         var co = cookies[i].code,
@@ -80,27 +87,66 @@ function parseDeparturesData(data) {
         var depArray = $.grep(data, function(n, i) {
                         return (n.stationid == co);
                     });
+        if (depArray.length < departuresLength) {
+            departuresLength = depArray.length;
+        }
 
-        var str = "";
-        for (var j = 0; j < depArray.length; j++) {
-            str += parseTime(depArray[j].departuretime) + " " + na + " " + depArray[j].platform + "<br>";
+        var str = '';
+        var strHeading = '';
+        var innerCount = 0;
+        // putting together all of the departure times
+        for (var j = 0; j < departuresLength; j++) {
+            str += '<table style="border: 1px solid grey; width:100%; margin:2px"><tr><td style="width:15%; padding-left:2px">'
+                + '<table style="border:0px"><tr><td>' 
+                + parseTime(depArray[j].departuretime) + '</td></tr><tr>'
+                + '<td style="color:#FF0000; background-color=#ffffff; font-size:10px">' + depArray[j].delay
+                + '</td></tr></table></td><td><table style="border:0px"><tr><td><b>' + depArray[j].destination
+                + '</b></td></tr><tr><td style="color:#AFAFAF; background-color=#ffffff">' + depArray[j].traintype
+                + '</td></tr></table></td>'
+                + '<td style="font-size: 18px; width:10%; padding-right:2px; text-align:right;';
+            if (depArray[j].platformchange === "true")
+            {
+                str += ' color:#FF0000; background-color=#ffffff';
+            }
+                str += '">' + depArray[j].platform + '</td></tr></table>';
+            
+            if (innerCount < 3) {
+                strHeading += '<tr><td style="text-align:left; width:15%">' + parseTime(depArray[j].departuretime) 
+                        + '</td><td style="padding-left:2px">' + depArray[j].destination + '</td></tr>';
+                if (depArray[j].delay !== "") {
+                    strHeading += '<tr><td colspan="2" style="color:#FF0000; background-color=#ffffff; padding-left:10px">'
+                        + depArray[j].delay.substr(1, 10) + ' delayed</td></tr>';
+                    innerCount++;
+                }
+                if (depArray[j].platformchange === "true") {
+                    strHeading += '<tr><td colspan="2" style="color:#FF0000; background-color=#ffffff; padding-left:10px">'
+                        + 'Departs from platform ' + depArray[j].platform + '</td></tr>';
+                    innerCount++;
+                }
+                
+                innerCount++;
+            }
         }
             
         // add bootstrap accordion to departures tab
-        appendDiv += '<div class="panel panel-default" name="' + co + '"><div class="panel-heading"><h4 class="panel-title">'
+        appendDiv += '<div class="panel panel-default" name="' + co + '">'
+                    + '<div class="panel-heading panel-custom"><h4 class="panel-title">'
                     + '<a data-toggle="collapse" data-parent="#accordion" href="#collapse' + i.toString() + '">'
-                    + '<table border=1 style="width:100%"><tr><td>' + na + '</td><td>'
-                    + '<table border=0 style="width:100%"><tr><td style="text-align:right">1 BALH</td></tr><tr><td style="text-align:right">2 BLOB</td></tr>' 
-                    + '<tr><td style="text-align:right">3 BLIP</td></tr></table></td></tr></table>'
+                    + '<table border=1 style="width:100%"><tr><td style="padding-right:15px">' + na + '</td><td style="width:50%">'
+                    + '<table border=0 style="width:100%; font-size:12px; content-align:right">'
+                    + strHeading
+                    + '</table></td></tr></table>'
                     + '</a></h4></div><div id="collapse' + i.toString() + '" class="panel-collapse collapse">'
-                    + '<div class="panel-body"><p>' + str + '</p></div></div></div>';
+                    + '<div class="panel-body" style="padding:2px; margin-top:0px">' + str + '</div></div></div>';
         
         editDiv += '<div name=' + co + '><input type="checkbox" class="deletelist" name="' + na + '" code="' + co + '"> ' + na + '<br></div>';
     };
         
     appendDiv += "</div>";
+    if (cookies.length > 0) {
     $('#tab-1').html(appendDiv);
     $("#tab-2").html(editDiv);
+    }
 }
 
 // AJAX call functions

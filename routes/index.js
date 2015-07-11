@@ -247,4 +247,5 @@ router.departuresdbinsert = function(req, res) {
     return res.json("successfully inserted in departures db");
 };
 
+
 module.exports = router;

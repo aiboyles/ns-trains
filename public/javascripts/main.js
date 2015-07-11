@@ -23,7 +23,10 @@ function oops(data) {
 
 // functions for populating tabs
 function parseDisruptionsData(data) {
-    $('#disruptions-tab').html(''); 
+    $('#disruptions-tab').html('');
+    
+    $('li#disruptionstab').html('<a data-toggle="tab" href="#disruptions-tab">Disruptions <span class="badge">' + data.length + '</span></a></li>');
+    
     var appendDiv = "<div class='panel-group' id='accordion'>";
     
     for (var i = 0; i < data.length; i++) {
@@ -68,7 +71,7 @@ function parseDeparturesData(data) {
     $('#tab-1').html(''); 
     $('#tab-2').html(''); 
     var appendDiv = "<div class='panel-group' id='accordion'>";
-    var editDiv = "<button class='btn btn-danger' id='deletebutton' type='submit'>Delete</button><br><p>";
+    var editDiv = "<button class='btn btn-danger' id='deletebutton' type='button'>Delete</button><hr>";
     
     for (var i = 0; i < cookies.length; i++) {
         var co = cookies[i].code,
@@ -84,19 +87,18 @@ function parseDeparturesData(data) {
         }
             
         // add bootstrap accordion to departures tab
-        appendDiv += "<div class='panel panel-default'><div class='panel-heading'><h4 class='panel-title'>"
-                    + "<a data-toggle='collapse' data-parent='#accordion' href='#collapse" + i.toString() + "'>"
-                    + "<table border=1 style='width:100%'><tr><td>" + na + "</td><td>"
-                    + "<table border=0 style='width:100%'><tr><td style='text-align:right'>1 BALH</td></tr><tr><td style='text-align:right'>2 BLOB</td></tr>" 
-                    + "<tr><td style='text-align:right'>3 BLIP</td></tr></table></td></tr></table>"
-                    + "</a></h4></div><div id='collapse" + i.toString() + "' class='panel-collapse collapse'>"
-                    + "<div class='panel-body'><p>" + str + "</p></div></div></div>";
+        appendDiv += '<div class="panel panel-default" name="' + co + '"><div class="panel-heading"><h4 class="panel-title">'
+                    + '<a data-toggle="collapse" data-parent="#accordion" href="#collapse' + i.toString() + '">'
+                    + '<table border=1 style="width:100%"><tr><td>' + na + '</td><td>'
+                    + '<table border=0 style="width:100%"><tr><td style="text-align:right">1 BALH</td></tr><tr><td style="text-align:right">2 BLOB</td></tr>' 
+                    + '<tr><td style="text-align:right">3 BLIP</td></tr></table></td></tr></table>'
+                    + '</a></h4></div><div id="collapse' + i.toString() + '" class="panel-collapse collapse">'
+                    + '<div class="panel-body"><p>' + str + '</p></div></div></div>';
         
-        editDiv += "<input type='checkbox' name='" + co + "'> " + na + "<br>";
+        editDiv += '<div name=' + co + '><input type="checkbox" class="deletelist" name="' + na + '" code="' + co + '"> ' + na + '<br></div>';
     };
         
     appendDiv += "</div>";
-    editDiv += "</p>";
     $('#tab-1').html(appendDiv);
     $("#tab-2").html(editDiv);
 }
@@ -275,6 +277,13 @@ $(document).ready(function() {
 		$('#tab-1').addClass('current');
         $('#filter').val('');
         $('.list-group-item').show();
+        populateDepartures(function(data)
+        {
+            parseDeparturesData(data);
+            insertDeparturesDb(data, function(results) {
+                console.log("insert COMPLETED departures" + results);
+            });
+        });
     });
     
     $('ul.tabs li').click(function(){
@@ -284,5 +293,39 @@ $(document).ready(function() {
 		$(this).addClass('current');
 		$("#"+tab_id).addClass('current');
 	});
+    
+    $('div#tab-2').on('click', 'button.btn', function () {
+	    var checkArray = new Array();
+        var codeArray = new Array();
+        var count = 0;
+        $('input[type=checkbox]').each(function () {
+            console.log($(this).attr('code').trim());
+            if ($(this).is(' :checked')) {
+                console.log("name " + typeof($(this).attr('name').trim()));
+                checkArray[count] = $(this).attr('name').trim();
+                codeArray[count] = $(this).attr('code').trim()
+                count++;
+            }
+        });
+        for (j = 0; j < checkArray.length; j ++) {
+            console.log("name is " + checkArray[j]);
+            deleteCookie(checkArray[j]);
+            var depTimesList = $('#tab-1 div[name=' + codeArray[j] + ']');
+            var editList = $('#tab-2 div[name=' + codeArray[j] + ']');
+            depTimesList.each(function () {
+                console.log($(this));
+                $(this).remove();
+            });
+            editList.each(function () {
+                console.log($(this));
+                $(this).remove();
+            });
+        }
+
+        $('ul.tabs li').removeClass('current');
+		$('.sub-tab-content').removeClass('current');
+        $('[data-tab="tab-1"]').addClass('current');
+		$('#tab-1').addClass('current');
+    });
 
 });

@@ -1,6 +1,7 @@
 var express = require('express');
 var disruptions = require('../logic/disruptions');
 var departures = require('../logic/departures');
+var stations = require('../logic/stations');
 var router = express.Router();
 var async = require('async');
 var pg = require('pg');
@@ -17,14 +18,6 @@ var configValues = {
         access_token: config.wachtwoord
 };
 
-var options = {
-    url: "http://webservices.ns.nl/ns-api-stations",
-    auth: {
-        user: configValues.username,
-        password: configValues.access_token
-    }
-}
-
 router.index = function(req, res) {
   res.render('index', {
     title: 'NS Trein App'
@@ -33,12 +26,14 @@ router.index = function(req, res) {
 
 // DISRUPTIONS routes
 
+// pulls disruptions from NS API
 router.disruptions = function(req, res) {
     disruptions(function (data) {
         res.json(data);
     });
 };
 
+// pulls disruptions info from database
 router.disruptionsdb = function(req, res) {
     var results = [];
 
@@ -64,6 +59,7 @@ router.disruptionsdb = function(req, res) {
     });
 };
 
+// inserts provided disruptions info into database
 router.disruptionsdbinsert = function(req, res) {
     var tempDay = new Date();
     var tempTimeStamp = tempDay.getTime();
@@ -72,7 +68,6 @@ router.disruptionsdbinsert = function(req, res) {
     
     function factory(idx) {
         if (idx < req.body.datalength) {
-            //console.log("disruptions[idx].route " + disruptions[idx].route);
             return this.none("INSERT INTO disruptions(type, route, message, timestamp) values($1, $2, $3, $4)", 
                              [disruptions[idx].type, disruptions[idx].route, 
                               disruptions[idx].message, tempTimeStamp]);
@@ -82,12 +77,11 @@ router.disruptionsdbinsert = function(req, res) {
     // execute sequence of database inserts
     db.tx(function () {
         return promise.all([
-            this.none('DELETE FROM disruptions'),
+            this.none('DELETE FROM disruptions'), // deletes the outdated disruptions from db first
             this.sequence(factory)
                 ]);
         })
         .then(function () {
-            console.log("success! disruptions db insert");
         }, function (reason) {
             console.log(reason); // print error;
         });
@@ -97,91 +91,17 @@ router.disruptionsdbinsert = function(req, res) {
 
 // STATIONS routes
 
+// grabs the full list of stations from NS API
 router.stationlist = function(req, res) {
-    var results = [];
-
-    async.waterfall([
-        function makeApiCall(callback) {
-            request(options, function (err, res, body) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    // read XML results into cheerio
-                    //console.log("in else");
-                    var $ = cheerio.load(body, {
-                    xmlMode: true
-                    });
-                    callback(null, $);
-                }
-            });
-        },
-        
-        function createStationArray($, callback) {
-            var stationArray = [];
-            var iterator = 0;
-            $('stations').children().each(function(i, elm) {
-                if (($(this).find('name').text() != false) && ($(this).find('country').text() == 'NL')) {
-                    stationArray[iterator] = {
-                                name: $(this).find('name').text(),
-                                code: $(this).find('code').text(),
-                            };
-                    iterator++;
-                }
-            });
-        callback(null, stationArray);
-        },
-        
-    function insertArray(stationArray, callback) {
-        var tempDay = new Date();
-        var tempTimeStamp = tempDay.getTime();
-        var db = pgp(connectionString);
-    
-        function factory(idx) {
-            if (idx < stationArray.length) {
-                return this.none("INSERT INTO stationlist(name, code, timestamp) values($1, $2, $3)", 
-                                 [stationArray[idx].name, stationArray[idx].code, tempTimeStamp]);
-            }
-        }
-    
-        db.tx(function () {
-            return promise.all([
-                this.none('DELETE FROM stationlist'),
-                this.sequence(factory)
-            ]);
-        })
-        .then(function () {
-        }, function (reason) {
-            console.log(reason); // print error;
-        });
-    }
-        ], function (err, result) {
-        callback("stations successfully inserted");
+    stations(function (data) {
+        return res.json(data);
     });
-    res.json("stations successfully inserted");
 };
 
+// checks the stationlist currently in the database to see if it is out of date
 router.stationlistcheck = function(req, res) {
-    var results = [];
-
-    // Get a Postgres client from the connection pool
-    pg.connect(connectionString, function(err, client, done) {
-        // SQL Query > Select Data
-        var query = client.query("SELECT * FROM stationlist ORDER BY name ASC");
-        // Stream results back one row at a time
-        query.on('row', function(row) {
-            results.push(row);
-        });
-
-        // After all data is returned, close connection and return results
-        query.on('end', function() {
-            client.end();
-            return res.json(results);
-        });
-
-        // Handle Errors
-        if(err) {
-          console.log(err);
-        }
+    stations.stationlistcheck(function (data) {
+        return res.json(data);
     });
 };
 

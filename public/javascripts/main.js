@@ -246,15 +246,6 @@ function insertDeparturesDb(results, single, callback) {
     });
 }
 
-function deleteFromDeparturesDb(callback) {
-    $.ajax({
-        type: 'GET',
-        url: '../departuresdbdelete',
-        success: callback,
-        error: oops
-    });
-}
-
 // STATIONS related
 function checkStationList(callback) {
     $.ajax({

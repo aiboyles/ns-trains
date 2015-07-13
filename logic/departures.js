@@ -187,7 +187,7 @@ module.exports = function (stationsJson, callbackFinal) {
         });
 }
 
-module.exports.depDb = function (stations, callbackFinal) {
+module.exports.departuresdb = function (stations, callbackFinal) {
     async.waterfall([
         function createStationArray(callbackStation) {
             var ca = stations.split(';');
@@ -208,4 +208,47 @@ module.exports.depDb = function (stations, callbackFinal) {
     ], function (err, result) {
         callbackFinal(result);
     });
+}
+
+module.exports.departuresdbinsert = function (depArray, singlestation, callback) {
+
+    var tempDay = new Date();
+    var tempTimeStamp = tempDay.getTime();
+    var departures = JSON.parse(depArray);
+    var deleteLength = 1;
+    if (!singlestation) {
+        deleteLength = departures.length;
+    }
+    
+    var db = pgp(connectionString);
+    
+    function factory(idx) {
+        if (idx < departures.length) {
+            return this.none("INSERT INTO departures(stationid, stationname, destination, departuretime, traintype, "
+                             + "route, platform, platformchange, delay, timestamp) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", 
+                             [departures[idx].stationid, departures[idx].stationname, 
+                              departures[idx].destination, departures[idx].departuretime, 
+                              departures[idx].traintype, departures[idx].route, 
+                              departures[idx].platform, departures[idx].platformchange, 
+                              departures[idx].delay, tempTimeStamp]);
+        }
+    }
+    
+    function factory2(idx2) {
+        if (idx2 < deleteLength) {
+            return this.none("DELETE FROM departures WHERE stationid=$1", [departures[idx2].stationid]);
+        }
+    }
+    
+    db.tx(function () {
+        return promise.all([
+            this.sequence(factory2),
+            this.sequence(factory)
+                ]);
+        })
+        .then(function () {
+        }, function (reason) {
+            console.log(reason); // print error;
+        });
+    callback("successfully inserted in departures db");
 }

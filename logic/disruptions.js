@@ -176,7 +176,7 @@ module.exports.disruptionsdbinsert = function (data, callback) {
     var db = pgp(connectionString);
     
     function factory(idx) {
-        if (idx < req.body.datalength) {
+        if (idx < disruptions.length) {
             return this.none("INSERT INTO disruptions(type, route, message, timestamp) values($1, $2, $3, $4)", 
                              [disruptions[idx].type, disruptions[idx].route, 
                               disruptions[idx].message, tempTimeStamp]);

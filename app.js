@@ -35,7 +35,6 @@ app.get('/stationlistcheck', routes.stationlistcheck);
 app.post('/departures', routes.departures);
 app.post('/departuresdb', routes.departuresdb);
 app.post('/departuresdbinsert', routes.departuresdbinsert);
-app.get('/departuresdbdelete', routes.departuresdbdelete);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -20,7 +20,7 @@ var configValues = {
 
 router.index = function(req, res) {
   res.render('index', {
-    title: 'NS Trein App'
+    title: 'NS Train App'
   });
 }
 
@@ -41,10 +41,8 @@ router.disruptionsdb = function(req, res) {
 };
 
 // inserts provided disruptions info into database
-router.disruptionsdbinsert = function(req, res) {
-    disruptions.disruptionsdbinsert(req.body.data, function (data) {
-        return res.json(data);
-    });
+router.disruptionsdbinsert = function(req) {
+    disruptions.disruptionsdbinsert(req.body.data);
 };
 
 // STATIONS routes
@@ -77,10 +75,8 @@ router.departuresdb = function(req, res) {
     });
 };
 
-router.departuresdbinsert = function(req, res) {
-    departures.departuresdbinsert(req.body.data, req.body.singlestation, function (data) {
-        return res.json(data);
-    });
+router.departuresdbinsert = function(req) {
+    departures.departuresdbinsert(req.body.data, req.body.singlestation);
 };
 
 module.exports = router;

@@ -169,7 +169,7 @@ module.exports.disruptionsdb = function (callback) {
     });
 }
 
-module.exports.disruptionsdbinsert = function (data, callback) {
+module.exports.disruptionsdbinsert = function (data) {
     var tempDay = new Date();
     var tempTimeStamp = tempDay.getTime();
     var disruptions = JSON.parse(data);
@@ -194,7 +194,5 @@ module.exports.disruptionsdbinsert = function (data, callback) {
         }, function (reason) {
             console.log(reason); // print error;
         });
-    
-    callback("successful insertion");
 }
     

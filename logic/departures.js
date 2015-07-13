@@ -250,5 +250,4 @@ module.exports.departuresdbinsert = function (depArray, singlestation, callback)
         }, function (reason) {
             console.log(reason); // print error;
         });
-    callback("successfully inserted in departures db");
 }

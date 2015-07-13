@@ -6,7 +6,7 @@ var cheerio = require('cheerio');
 var S = require('string');
 var async = require('async');
 var pg = require('pg');
-var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/annboyles';
+var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/nstreins';
 
 var pgpLib = require('pg-promise');
 var pgp = pgpLib();

@@ -16,7 +16,6 @@ var today = new Date();
 var iterator = 0;
 
 var months = {'jan':'0', 'feb':'1', 'mrt':'2', 'apr':'3', 'mei':'4', 'jun':'5', 'jul':'6', 'aug':'7', 'sep':'8', 'okt':'9', 'nov':'10', 'dec':'11'};
-var existingids = [];
 var outDated = false;
 
 var configValues = {
@@ -57,6 +56,7 @@ module.exports = function(callbackFinal) {
         
         // process the unplanned events from NS API
         function processUnplannedEvents($, callback) {
+            //console.log("in process Unplanned events");
             var disruptions = [];
             var iterator = 0;
             $('Ongepland').children().each(function(i, elm) {
@@ -76,10 +76,13 @@ module.exports = function(callbackFinal) {
         
         // then process the planned events
         function processPlannedEvents($, disruptions, callback) {
+            //var iterator = disruptions.length;
+            //console.log("in processPlannedEvents and iterator is ");
+            var existingids = [];
             var iterator = disruptions.length;
-            
             $('Gepland').children().each(function(i, elm) {
                 // tempArray splits the id string to parse out the start date for the disruption
+                //console.log("in Gepland " + $(this).find('id').text());
                 var tempArray = (($(this).find('id').text()).split('_')).slice(-2);
                 var startDateString = "";
                 var startDate;
@@ -126,6 +129,7 @@ module.exports = function(callbackFinal) {
             callback(null, disruptions);
         }            
     ], function (err, result) {
+        //console.log("In the final callback and result is " + result.length);
         callbackFinal(result);
     });
 }

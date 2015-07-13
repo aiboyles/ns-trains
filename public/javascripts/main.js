@@ -73,6 +73,8 @@ function parseStationData(data) {
 
 // has to populates the departures tab AND "edit" tab
 function parseDeparturesData(data) {
+    console.log("I am in parseDepartures");
+    console.log("data[0] " + data[0].delay + " " + data[0].destination + " " + data[0].stationid);
     var cookies = getCookie();
     $('#tab-1').html(''); 
     $('#tab-2').html(''); 
@@ -94,14 +96,23 @@ function parseDeparturesData(data) {
         var str = '';
         var strHeading = '';
         var innerCount = 0;
+        var routeStr = '';
         // putting together all of the departure times
         for (var j = 0; j < departuresLength; j++) {
+            if (depArray[j].route !== "") {
+                routeStr = "via " + depArray[j].route;
+            }
+            else {
+                routeStr = '';
+            }
+            
             str += '<table style="border: 1px solid grey; width:100%; margin:2px"><tr><td style="width:15%; padding-left:2px">'
                 + '<table style="border:0px"><tr><td>' 
                 + parseTime(depArray[j].departuretime) + '</td></tr><tr>'
                 + '<td style="color:#FF0000; background-color=#ffffff; font-size:10px">' + depArray[j].delay
-                + '</td></tr></table></td><td><table style="border:0px"><tr><td><b>' + depArray[j].destination
+                + '</td></tr></table></td><td><table style="border:0px"><tr><td colspan=2><b>' + depArray[j].destination
                 + '</b></td></tr><tr><td style="color:#AFAFAF; background-color=#ffffff">' + depArray[j].traintype
+                + '</td><td style="font-size:14px; color:#AFAFAF; background-color=#ffffff; padding-left:5px">' + routeStr
                 + '</td></tr></table></td>'
                 + '<td style="font-size: 18px; width:10%; padding-right:2px; text-align:right;';
             if (depArray[j].platformchange === "true")
@@ -132,7 +143,7 @@ function parseDeparturesData(data) {
         appendDiv += '<div class="panel panel-default" name="' + co + '">'
                     + '<div class="panel-heading panel-custom"><h4 class="panel-title">'
                     + '<a data-toggle="collapse" data-parent="#accordion" href="#collapse' + i.toString() + '">'
-                    + '<table border=1 style="width:100%"><tr><td style="padding-right:15px">' + na + '</td><td style="width:50%">'
+                    + '<table style="width:100%"><tr><td style="padding-right:15px">' + na + '</td><td style="width:50%">'
                     + '<table border=0 style="width:100%; font-size:12px; content-align:right">'
                     + strHeading
                     + '</table></td></tr></table>'
@@ -174,8 +185,8 @@ function insertDisruptionsDb(results, callback) {
     $.ajax({
         type: 'POST',
         url: '../disruptionsdbinsert',
-        data: {results : results,
-               resultslength: results.length},
+        data: {data : JSON.stringify(results, null, 2),
+               datalength: results.length},
         success: callback,
         error: oops
     });
@@ -185,29 +196,40 @@ function insertDisruptionsDb(results, callback) {
 
 function checkDeparturesDb(callback) {
     $.ajax({
-        type: 'GET',
-        url: '../departuresdb',
-        success: callback,
-        error: oops
-    });
-}
-
-function populateDepartures(callback) {
-    $.ajax({
         type: 'POST',
-        url: '../departures',
+        url: '../departuresdb',
         data: {data: document.cookie},
         success: callback,
         error: oops
     });
 }
 
-function insertDeparturesDb(results, callback) {
+function populateDepartures(stationList, callback) {
+    $.ajax({
+        type: 'POST',
+        url: '../departures',
+        data: {data: JSON.stringify(stationList, null, 2)},
+        success: callback,
+        error: oops
+    });
+}
+
+function insertDeparturesDb(results, single, callback) {
     $.ajax({
         type: 'POST',
         url: '../departuresdbinsert',
-        data: {results : results,
-               resultslength: results.length},
+        data: {data : JSON.stringify(results, null, 2),
+               singlestation: single,
+               datalength: results.length},
+        success: callback,
+        error: oops
+    });
+}
+
+function deleteFromDeparturesDb(callback) {
+    $.ajax({
+        type: 'GET',
+        url: '../departuresdbdelete',
         success: callback,
         error: oops
     });
@@ -266,20 +288,107 @@ function getCookie() {
     return cookieArray;
 }
 
+function checkInArray(data, val){
+    for(var i = 0; i < data.length; i++) {
+        if(data[i].code == val)
+            return i;
+    }
+    return -1;
+}
+
+function populateDeparturesFromCookie() {
+    populateDepartures(getCookie(), function (dataFromApi) {
+        parseDeparturesData(dataFromApi);
+        insertDeparturesDb(dataFromApi, false, function (results) {
+            console.log("inserted completed departures" + results);
+        });
+    });
+}
+
+function parseDepartureDbResults(data, departuresArray, callback) {
+    var d = new Date();
+    var cookies = getCookie();
+    var count = 0;
+    
+    async.whilst(
+        function () {
+            return count < cookies.length;
+        },
+        function (callbackInner) {
+            var co = cookies[count].code,
+                na = cookies[count].name;
+
+            // check to see if the station is in the departures db
+            var checkDbEntryArray = $.grep(data, function(n, i) {
+                                    return (n.stationid == co);
+                                });
+                
+            // if it is already in the departures db, then check if it is outdated or not
+            if (checkDbEntryArray.length > 0) {
+                if ((d.getTime() - checkDbEntryArray[0].timestamp) < 60000) {
+                    departuresArray.push.apply(departuresArray, checkDbEntryArray);
+                    count++;
+                    callbackInner();
+                }
+                else {
+                    console.log(checkDbEntryArray[0].stationid + " is YES OUTDATED");
+                    var singleStation = new Array();
+                    console.log("singleStation is " + cookies[count].code);
+                    singleStation.push(cookies[count]);
+                    populateDepartures(singleStation, function (dataFromApi) {
+                        console.log(dataFromApi[0].stationid + " returned from populatedDepartures " + dataFromApi.length);
+                        departuresArray.push.apply(departuresArray, dataFromApi);
+                        count++;
+                        callbackInner();
+                        insertDeparturesDb(dataFromApi, true, function (results) {
+                            console.log("inserted completed departures" + results);
+                        });
+                    });
+                }
+            }
+            else {
+                console.log(cookies[count].code + " is NOT in the db already");
+                var singleStation = new Array();
+                singleStation.push(cookies[count]);
+                populateDepartures(singleStation, function (dataFromApi) {
+                    console.log(cookies[count].code + " is back from API call");
+                    departuresArray.push.apply(departuresArray, dataFromApi);
+                    count++;
+                    callbackInner();
+                    insertDeparturesDb(dataFromApi, true, function (results) {
+                        console.log("inserted completed departures" + results);
+                    });
+                });
+            }
+        },
+        function (err) {
+            console.log("just before return to departuresArray");
+            callback(departuresArray);
+        });
+}
+
+
+
 $(document).ready(function() {
     var d = new Date();
+    var departuresArray = [];
     
+    // check the departure times in the database
     checkDeparturesDb(function(data)
     {
-        if ((data.length > 0) && ((d.getTime() - data[0].timestamp) < 120000)) {
+        if (data.length > 0) {
+            parseDepartureDbResults(data, departuresArray, function(data) {
+                console.log("parseDeparturesDbResults length is " + data.length);
+                // if results are outdated, populate from API
+                // if results are NOT outdated, then parseDeparturesData
                 parseDeparturesData(data);
+            });
         }
-        else { // yes, the departure entries in the database are outdated
-            populateDepartures(function(data)
-            {
-                parseDeparturesData(data);
-                insertDeparturesDb(data, function(results) {
-                    console.log("insert COMPLETED departures" + results);
+        else {
+            populateDepartures(getCookie(), function (dataFromApi) {
+                parseDeparturesData(dataFromApi);
+                insertDeparturesDb(dataFromApi, false, function (results) {
+                    console.log("inserted completed departures" + results);
                 });
             });
         }
@@ -287,12 +396,16 @@ $(document).ready(function() {
     
     checkDisruptionsDb(function(data)
     {
-        if ((data.length > 0) && ((d.getTime() - data[0].timestamp) < 120000)) {
+        //console.log(data);
+        if ((data.length > 0) && ((d.getTime() - data[0].timestamp) < 60000)) {
+                //console.log("NOT outdated disruptions " + data.length);
                 parseDisruptionsData(data);
         }
         else {
+            //console.log("YES outdated disruptions");
             populateDisruptions(function(data)
             {
+                //console.log("popDisrup data " + data + " " + data.length);
                 parseDisruptionsData(data);
                 insertDisruptionsDb(data, function(results) {
                     console.log("insert COMPLETED" + results);
@@ -320,15 +433,14 @@ $(document).ready(function() {
         $('ul.tabs li').removeClass('current');
 		$('.sub-tab-content').removeClass('current');
         $('[data-tab="tab-1"]').addClass('current');
+        $('#tab-1').prepend('<div style="font-size: 18px"><p>Refreshing...</p></div>');
 		$('#tab-1').addClass('current');
         $('#filter').val('');
         $('.list-group-item').show();
-        populateDepartures(function(data)
+        // TO FIX
+        populateDeparturesFromCookie(function(data)
         {
-            parseDeparturesData(data);
-            insertDeparturesDb(data, function(results) {
-                console.log("insert COMPLETED departures" + results);
-            });
+            console.log("completed from cookie");
         });
     });
     

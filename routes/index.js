@@ -35,58 +35,16 @@ router.disruptions = function(req, res) {
 
 // pulls disruptions info from database
 router.disruptionsdb = function(req, res) {
-    var results = [];
-
-    // Get a Postgres client from the connection pool
-    pg.connect(connectionString, function(err, client, done) {
-        // SQL Query > Select Data
-        var query = client.query("SELECT * FROM disruptions ORDER BY id ASC");
-        // Stream results back one row at a time
-        query.on('row', function(row) {
-            results.push(row);
-        });
-        
-        // After all data is returned, close connection and return results
-        query.on('end', function() {
-            client.end();
-            return res.json(results);
-        });
-
-        // Handle Errors
-        if(err) {
-          console.log(err);
-        }
+    disruptions.disruptionsdb(function (data) {
+        res.json(data);
     });
 };
 
 // inserts provided disruptions info into database
 router.disruptionsdbinsert = function(req, res) {
-    var tempDay = new Date();
-    var tempTimeStamp = tempDay.getTime();
-    var disruptions = JSON.parse(req.body.data);
-    var db = pgp(connectionString);
-    
-    function factory(idx) {
-        if (idx < req.body.datalength) {
-            return this.none("INSERT INTO disruptions(type, route, message, timestamp) values($1, $2, $3, $4)", 
-                             [disruptions[idx].type, disruptions[idx].route, 
-                              disruptions[idx].message, tempTimeStamp]);
-        }
-    }
-    
-    // execute sequence of database inserts
-    db.tx(function () {
-        return promise.all([
-            this.none('DELETE FROM disruptions'), // deletes the outdated disruptions from db first
-            this.sequence(factory)
-                ]);
-        })
-        .then(function () {
-        }, function (reason) {
-            console.log(reason); // print error;
-        });
-    
-    return res.json("disruptionsdbsuccess");
+    disruptions.disruptionsdbinsert(req.body.data, function (data) {
+        return res.json(data);
+    });
 };
 
 // STATIONS routes

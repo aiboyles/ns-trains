@@ -10,6 +10,8 @@ var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/an
 
 var pgpLib = require('pg-promise');
 var pgp = pgpLib();
+var promise = require('bluebird');
+var rp = require('request-promise');
 
 var months = {
     'jan': '0',
@@ -141,3 +143,58 @@ module.exports = function (callbackFinal) {
         callbackFinal(result);
     });
 }
+
+module.exports.disruptionsdb = function (callback) {
+    var results = [];
+
+    // Get a Postgres client from the connection pool
+    pg.connect(connectionString, function(err, client, done) {
+        // SQL Query > Select Data
+        var query = client.query("SELECT * FROM disruptions ORDER BY id ASC");
+        // Stream results back one row at a time
+        query.on('row', function(row) {
+            results.push(row);
+        });
+        
+        // After all data is returned, close connection and return results
+        query.on('end', function() {
+            client.end();
+            callback(results);
+        });
+
+        // Handle Errors
+        if(err) {
+          console.log(err);
+        }
+    });
+}
+
+module.exports.disruptionsdbinsert = function (data, callback) {
+    var tempDay = new Date();
+    var tempTimeStamp = tempDay.getTime();
+    var disruptions = JSON.parse(data);
+    var db = pgp(connectionString);
+    
+    function factory(idx) {
+        if (idx < req.body.datalength) {
+            return this.none("INSERT INTO disruptions(type, route, message, timestamp) values($1, $2, $3, $4)", 
+                             [disruptions[idx].type, disruptions[idx].route, 
+                              disruptions[idx].message, tempTimeStamp]);
+        }
+    }
+    
+    // execute sequence of database inserts
+    db.tx(function () {
+        return promise.all([
+            this.none('DELETE FROM disruptions'), // deletes the outdated disruptions from db first
+            this.sequence(factory)
+                ]);
+        })
+        .then(function () {
+        }, function (reason) {
+            console.log(reason); // print error;
+        });
+    
+    callback("successful insertion");
+}
+    

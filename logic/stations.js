@@ -10,6 +10,8 @@ var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/an
 
 var pgpLib = require('pg-promise');
 var pgp = pgpLib();
+var promise = require('bluebird');
+var rp = require('request-promise');
 
 var configValues = {
     username: config.gebruikers_naam,
